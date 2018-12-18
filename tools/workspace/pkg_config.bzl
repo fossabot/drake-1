@@ -1,5 +1,6 @@
 # -*- python -*-
 
+load("@drake//tools/skylark:pathutils.bzl", "join_paths")
 load("@drake//tools/workspace:execute.bzl", "path", "which")
 
 _DEFAULT_TEMPLATE = Label("@drake//tools/workspace:pkg_config.BUILD.tpl")
@@ -26,7 +27,7 @@ def _run_pkg_config(repository_ctx, command_line, pkg_config_paths):
     tokens = [x for x in result.stdout.strip().split(" ") if x]
     return struct(tokens = tokens, error = None)
 
-def setup_pkg_config_repository(repository_ctx):
+def setup_pkg_config_repository(repository_ctx, environ = []):
     """This is the macro form of the pkg_config_repository() rule below.
     Refer to that rule's API documentation for details.
 
@@ -49,6 +50,17 @@ def setup_pkg_config_repository(repository_ctx):
         "pkg_config_paths",
         [],
     )
+
+    for envvar in environ:
+        if envvar in repository_ctx.os.environ:
+            for subdir in ["share", "lib"]:
+                pkg_config_path = join_paths(
+                    repository_ctx.os.environ[envvar],
+                    subdir,
+                    "pkgconfig",
+                )
+                if repository_ctx.path(pkg_config_path).exists:
+                    pkg_config_paths = [pkg_config_path] + pkg_config_paths
 
     # Check if we can find the required *.pc file of any version.
     result = _run_pkg_config(repository_ctx, args, pkg_config_paths)

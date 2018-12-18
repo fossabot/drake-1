@@ -59,6 +59,7 @@ load("@drake//tools/workspace/ruby:repository.bzl", "ruby_repository")
 load("@drake//tools/workspace/scs:repository.bzl", "scs_repository")
 load("@drake//tools/workspace/sdformat:repository.bzl", "sdformat_repository")
 load("@drake//tools/workspace/semantic_version:repository.bzl", "semantic_version_repository")  # noqa
+load("@drake//tools/workspace/sipopt:repository.bzl", "sipopt_repository")
 load("@drake//tools/workspace/snopt:repository.bzl", "snopt_repository")
 load("@drake//tools/workspace/spdlog:repository.bzl", "spdlog_repository")
 load("@drake//tools/workspace/sphinx:repository.bzl", "sphinx_repository")
@@ -200,6 +201,8 @@ def add_default_repositories(excludes = [], mirrors = DEFAULT_MIRRORS):
         sdformat_repository(name = "sdformat", mirrors = mirrors)
     if "semantic_version" not in excludes:
         semantic_version_repository(name = "semantic_version", mirrors = mirrors)  # noqa
+    if "sipopt" not in excludes:
+        sipopt_repository(name = "sipopt")
     if "snopt" not in excludes:
         snopt_repository(name = "snopt")
     if "spdlog" not in excludes:

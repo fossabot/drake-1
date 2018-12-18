@@ -799,7 +799,7 @@ drake_cc_library(
     hdrs = ["ipopt_solver.h"],
     deps = select({
         "//conditions:default": [
-            "@ipopt",
+            "@sipopt",  # DO NOT MERGE
             ":mathematical_program_api",
             "//common:unused",
             "//math:autodiff",

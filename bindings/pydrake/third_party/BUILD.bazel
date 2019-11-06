@@ -1,6 +1,5 @@
 # -*- python -*-
 
-load("@drake//tools/install:install.bzl", "install")
 load(
     "@drake//tools/skylark:drake_py.bzl",
     "drake_py_library",
@@ -25,7 +24,12 @@ PACKAGE_INFO = get_pybind_package_info(
 drake_py_library(
     name = "module_py",
     srcs = ["__init__.py"],
+    deprecation = " ".join([
+        "//bindings/pydrake/third_party:module_py is deprecated and will be",
+        "removed on 2020-02-01.",
+    ]),
     imports = PACKAGE_INFO.py_imports,
+    tags = ["manual"],
 )
 
 # Forward physical files to simplify working with `third_party` files (both
@@ -44,16 +48,21 @@ forward_files(
     visibility = ["//visibility:private"],
 )
 
-# TODO(eric.cousineau): Use Ubuntu packages once we have a later version of
-# `python-wrapt` that does not have bugs like a mis-mapped `__mod__` proxy.
 drake_py_library(
     name = "wrapt_py",
     srcs = [
         "wrapt/__init__.py",
         "wrapt/wrappers.py",
     ],
+    deprecation = " ".join([
+        "//bindings/pydrake/third_party:wrapt_py is deprecated and will be",
+        "removed on 2020-02-01. Please use the system wrapt instead.",
+    ]),
     imports = PACKAGE_INFO.py_imports,
-    tags = ["nolint"],
+    tags = [
+        "manual",
+        "nolint",
+    ],
 )
 
 PY_LIBRARIES = [
@@ -63,16 +72,13 @@ PY_LIBRARIES = [
 
 drake_py_library(
     name = "third_party",
+    deprecation = " ".join([
+        "//bindings/pydrake/third_party is deprecated and will be",
+        "removed on 2020-02-01.",
+    ]),
+    tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = PY_LIBRARIES,
-)
-
-install(
-    name = "install",
-    targets = PY_LIBRARIES,
-    py_dest = PACKAGE_INFO.py_dest,
-    docs = ["wrapt/LICENSE"],
-    doc_dest = "share/doc",
 )
 
 add_lint_tests_pydrake()

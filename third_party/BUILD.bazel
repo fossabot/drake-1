@@ -31,6 +31,7 @@ exports_files(
     visibility = ["//common/proto:__pkg__"],
 )
 
+# DRAKE_DEPRECATED 2020-02-01 Please use the system wrapt instead.
 exports_files(
     ["com_github_grahamdumpleton_wrapt/" + f for f in [
         "LICENSE",

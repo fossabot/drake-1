@@ -10,7 +10,7 @@ module to be robust against this situation.
 import inspect
 from types import MethodType
 
-from pydrake.third_party.wrapt import ObjectProxy
+from wrapt import ObjectProxy
 
 # TODO(eric.cousineau): Add mechanism for enabling / disabling const-proxying.
 

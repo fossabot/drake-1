@@ -40,6 +40,7 @@ python3-tk
 python3-tornado
 python3-u-msgpack
 python3-virtualenv
+python3-wrapt
 python3-yaml
 python3-zmq
 qtbase5-dev

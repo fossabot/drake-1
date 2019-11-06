@@ -234,7 +234,6 @@ drake_py_library(
     srcs = ["cpp_const.py"],
     deps = [
         ":module_py",
-        "//bindings/pydrake/third_party:wrapt_py",
     ],
 )
 

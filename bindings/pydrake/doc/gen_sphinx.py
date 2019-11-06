@@ -25,9 +25,7 @@ from pydrake.common import (
 )
 from drake.doc.sphinx_base import gen_main
 
-EXCLUDE = [
-    "pydrake.third_party",
-]
+EXCLUDE = []
 
 
 def get_submodules(name):

@@ -6,3 +6,4 @@ pyzmq
 tornado
 u-msgpack-python
 virtualenv
+wrapt

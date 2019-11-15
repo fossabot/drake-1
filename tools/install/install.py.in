@@ -48,7 +48,7 @@ list_only = False
 # N.B. On linux, dynamic libraries may have their version number as a suffix
 # (e.g. my_lib.so.x.y.z).
 dylib_match = re.compile(r"(.*\.so)(\.\d+)*$|(.*\.dylib)$")
-
+non_executables = set()
 
 def is_relative_link(filepath):
     """Find if a file is a relative link.
@@ -98,8 +98,10 @@ def find_binary_executables():
 
 def may_be_binary(dst_full):
     # Try to minimize the amount of work that `find_binary_executables`
-    # must do.
-    extensions = [".h", ".py", ".obj", ".cmake", ".1", ".hpp", ".txt"]
+    # must do (in reverse approximate order of frequency).
+    extensions = [".h", ".py", ".obj", ".hpp", ".sdf", ".vtp", ".mtl", ".dae",
+                  ".urdf", ".stl", ".hh", ".png", ".vtm", ".cmake", ".txt",
+                  ".jpg", ".xml"]
     for extension in extensions:
         if dst_full.endswith(extension):
             return False
@@ -183,7 +185,13 @@ def install(src, dst):
             libraries_to_fix_rpath[basename] = dst_full
     elif may_be_binary(dst_full):  # May be an executable.
         potential_binaries_to_fix_rpath.append(dst_full)
-
+    elif dst_full.endswith(".py"):
+        with open(dst_full, mode='r', encoding='utf8') as file:
+            first_line = file.readline().rstrip("\n")
+        if not first_line.startswith("#!"):
+            non_executables.add(dst_full)
+    else:
+        non_executables.add(dst_full)
 
 def fix_rpaths_and_strip():
     # Add binary executables to list of files to be fixed up:
@@ -442,6 +450,12 @@ def main(args):
     # Libraries paths may need to be updated in libraries and executables.
     fix_rpaths_and_strip()
 
+    print("\n".join(non_executables))
+
+    potential_binaries = set(potential_binaries_to_fix_rpath)
+    actual_binaries = set([element[1] for element in binaries_to_fix_rpath])
+
+    print("\n".join(potential_binaries - actual_binaries))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -8,6 +8,7 @@ load(
     "drake_py_unittest",
 )
 load("//tools/jupyter:jupyter_py.bzl", "drake_jupyter_py_binary")
+load("@drake//tools/install:install.bzl", "install_files")
 
 drake_jupyter_py_binary(
     name = "mathematical_program",
@@ -47,6 +48,13 @@ drake_jupyter_py_binary(
     deps = [
         "//bindings/pydrake",
     ],
+)
+
+install_files(
+    name = "install",
+    dest = "share/drake/tutorials",
+    files = glob(["*.ipynb"]),
+    visibility = ["//visibility:public"],
 )
 
 add_lint_tests()

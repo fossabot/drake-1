@@ -99,7 +99,9 @@ def find_binary_executables():
 def may_be_binary(dst_full):
     # Try to minimize the amount of work that `find_binary_executables`
     # must do.
-    extensions = [".h", ".py", ".obj", ".cmake", ".1", ".hpp", ".txt"]
+    extensions = [
+        ".h", ".ipynb", ".py", ".obj", ".cmake", ".1", ".hpp", ".txt",
+    ]
     for extension in extensions:
         if dst_full.endswith(extension):
             return False

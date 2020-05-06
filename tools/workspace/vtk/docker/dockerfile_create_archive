@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled vtk binaries that are
+# downloaded during the build. They are neither called during the build nor
+# expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  lsb-release \
+  python3 \
+  qt5-default
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+pushd /opt/vtk
+tar -czf "vtk-$(sed -n 's/^#define VTK_VERSION "\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)"$/\1.\2.\3/p' /opt/vtk/include/vtk-*/vtkVersionMacros.h)-embree-$(sed -n 's/^#define RTC_VERSION_STRING "\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)"$/\1.\2.\3/p' /opt/vtk/include/embree3/rtcore_version.h)-ospray-$(sed -n 's/^#define OSPRAY_VERSION "\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)"$/\1.\2.\3/p' /opt/vtk/include/ospray/version.h)-python-$(python3 -V 2>&1 | sed -n 's/^.*\n*Python \([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\1.\2.\3/p')-qt-$(qmake -v | sed -n 's/^.*\n*.*Qt version \([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\1.\2.\3/p')-$(lsb_release -cs)-$(uname -p).tar.gz" -- *
+popd

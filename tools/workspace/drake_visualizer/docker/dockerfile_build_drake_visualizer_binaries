@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled drake-visualizer binaries
+# that are downloaded during the build. They are neither called during the build
+# nor expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+if [[ ! -x /.dockerenv ]]; then
+  echo 'ERROR: This script should be run via the accompanying Dockerfile' >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  binutils \
+  ca-certificates \
+  chrpath \
+  cmake \
+  g++ \
+  gcc \
+  git \
+  libeigen3-dev \
+  libexpat1 \
+  libfreetype6 \
+  libglew-dev \
+  libglib2.0-0 \
+  libglvnd-dev \
+  libjpeg-turbo8 \
+  libjsoncpp1 \
+  liblz4-1 \
+  liblzma5 \
+  libpng16-16 \
+  libqt5x11extras5-dev \
+  libtbb-dev \
+  libxt6 \
+  lsb-release \
+  ninja-build \
+  python3-dev \
+  python3-lxml
+  python3-numpy \
+  python3-pyassimp \
+  python3-pygments
+  python3-pyparsing
+  python3-scipy \
+  python3-yaml \
+  qt5-default \
+  qttools5-dev \
+  zlib1g
+
+if [[ "$(lsb-release -cs)" == 'focal' ]]; then
+  apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+    libdouble-conversion3 \
+    libtiff-dev
+else
+  apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+    libdouble-conversion1 \
+    libtiff5-dev
+fi
+
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+git clone --single-branch -q https://github.com/RobotLocomotion/director.git
+pushd director
+git checkout 4c3e570a6797ff840c74067c742455daaa113d93
+popd
+
+mkdir -p director-bin /opt/director
+pushd director-bin
+cmake \
+  -DBUILD_SHARED_LIBS:BOOL=OFF \
+  -DBUILD_TESTING:BOOL=OFF \
+  -DCMAKE_BUILD_TYPE:STRING=Release \
+  -DCMAKE_C_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -fstack-protector-strong' \
+  -DCMAKE_CXX_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -fstack-protector-strong' \
+  -DCMAKE_EXE_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DCMAKE_INSTALL_PREFIX:PATH=/opt/director \
+  -DCMAKE_MODULE_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DCMAKE_PREFIX_PATH:STRING=/opt/director \
+  -DCMAKE_SHARED_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DCMAKE_SHARED_MODULE_SUFFIX:STRING="$(python3-config --extension-suffix)" \
+  -DDD_QT_VERSION:STRING=5 \
+  -DUSE_EXTERNAL_INSTALL:BOOL=ON \
+  -DUSE_LCM:BOOL=ON \
+  -DUSE_SYSTEM_EIGEN:BOOL=ON \
+  -DUSE_SYSTEM_LCM:BOOL=ON \
+  -DUSE_SYSTEM_VTK:BOOL=ON \
+  -DVTK_DIR:PATH=/opt/vtk/lib/cmake/vtk-* \
+  -GNinja \
+  -Wno-dev \
+  ../director-src/distro/superbuild
+ninja
+popd
+rm -rf director director-bin
+
+find /opt/director -name __pycache__ -type d -exec rm -rf {} +
+
+strip \
+  /opt/director/bin/drake-visualizer \
+  /opt/director/lib/libddApp.so \
+  /opt/director/lib/libPythonQt.so \
+  /opt/director/lib/python3.*/site-packages/director/thirdparty/_transformations.*.so \
+  /opt/director/lib/python3.*/site-packages/director/vtkDRCFiltersPython.so
+
+chrpath -r '$ORIGIN/../lib' /opt/director/bin/drake-visualizer
+chrpath -r '$ORIGIN' /opt/director/lib/libddApp.so
+chrpath -r '$ORIGIN/../../..' /opt/director/lib/python3.*/site-packages/director/vtkDRCFiltersPython.*.so \
+chrpath -d /opt/director/lib/python3.*/site-packages/director/thirdparty/_transformations.*.so \
+
+rm -rf \
+  /opt/director/bin/directorPython \
+  /opt/director/include \
+  /opt/director/lib/*.a \
+  /opt/director/lib/cmake

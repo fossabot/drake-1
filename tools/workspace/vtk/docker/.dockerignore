@@ -1,0 +1,3 @@
+*.tar.gz
+*.tar.gz.sha256
+build_binaries_with_docker

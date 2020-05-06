@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled vtk binaries that are
+# downloaded during the build. They are neither called during the build nor
+# expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+if [[ ! -x /.dockerenv ]]; then
+  echo 'ERROR: This script should be run via the accompanying Dockerfile' >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  binutils \
+  ca-certificates \
+  cmake \
+  g++ \
+  gcc \
+  libtbb-dev \
+  ninja-build \
+  patch \
+  wget
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+wget -nv -O ospray-1.8.5.tar.gz https://github.com/ospray/ospray/archive/v1.8.5.tar.gz
+echo '6d85e103280aa4c8d0032a2cc3082f08a6021a79d22cf4a8e38b09f152f35f53  ospray-1.8.5.tar.gz' \
+  | sha256sum -c
+tar --one-top-level=ospray-src --strip-components=1 -xzf ospray-*.tar.gz
+rm -f ospray-*.tar.gz
+
+pushd ospray-src
+patch -p1 -i ../ospray_ospcommon.patch
+patch -p1 -i ../ospray_no_fast_math.patch
+popd
+rm -f ospray_*.patch \
+
+mkdir -p ospray-bin /opt/vtk
+pushd ospray-bin
+cmake \
+  -DCMAKE_BUILD_TYPE:STRING=Release \
+  -DCMAKE_C_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1 -fstack-protector-strong' \
+  -DCMAKE_CXX_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1 -fstack-protector-strong' \
+  -DCMAKE_INSTALL_PREFIX:PATH=/opt/vtk \
+  -DCMAKE_PREFIX_PATH:STRING=/opt/vtk \
+  -DCMAKE_SHARED_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DOSPRAY_ENABLE_APPS:BOOL=OFF \
+  -DOSPRAY_ENABLE_TESTING:BOOL=OFF \
+  -DOSPRAY_ENABLE_TUTORIALS:BOOL=OFF \
+  -GNinja \
+  -Wno-dev \
+  ../ospray-src
+ninja install/strip
+popd
+rm -rf ospray-*

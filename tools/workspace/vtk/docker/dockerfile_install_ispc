@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled vtk binaries that are
+# downloaded during the build. They are neither called during the build nor
+# expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+if [[ ! -x /.dockerenv ]]; then
+  echo 'ERROR: This script should be run via the accompanying Dockerfile' >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  ca-certificates \
+  wget
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+wget -nv https://github.com/ispc/ispc/releases/download/v1.13.0/ispc-v1.13.0-linux.tar.gz
+echo '8ab1189bd5db596b3eee9d9465d3528b6626a7250675d67102761bb0d284cd21  ispc-v1.13.0-linux.tar.gz' \
+  | sha256sum -c
+tar --one-top-level=ispc-bin --strip-components=1 -xzf ispc-v*-linux.tar.gz
+cp ispc-bin/bin/ispc /usr/local/bin
+rm -rf ispc-*

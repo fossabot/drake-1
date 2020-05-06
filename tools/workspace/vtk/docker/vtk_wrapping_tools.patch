@@ -1,0 +1,44 @@
+From: Jamie Snape <jamie.snape@kitware.com>
+Date: Wed, 6 May 2019 00:00:00 -0400
+Subject: [PATCH] Do not build vtkWrappingTools with Java wrapping support
+---
+ CMake/vtkModuleTop.cmake      | 2 --
+ Wrapping/Tools/CMakeLists.txt | 7 -------
+ 2 files changed, 9 deletions(-)
+
+diff --git a/CMake/vtkModuleTop.cmake b/CMake/vtkModuleTop.cmake
+index 8cf31497c4..3ccb8ee74a 100644
+--- a/CMake/vtkModuleTop.cmake
++++ b/CMake/vtkModuleTop.cmake
+@@ -519,7 +519,6 @@ if (NOT VTK_INSTALL_NO_DEVELOPMENT)
+                 CMake/vtkEncodeString.cmake
+                 CMake/vtkForwardingExecutable.cmake
+                 CMake/vtkHashSource.cmake
+-                CMake/vtkJavaWrapping.cmake
+                 CMake/vtkModuleAPI.cmake
+                 CMake/vtkModuleHeaders.cmake.in
+                 CMake/vtkModuleInfo.cmake.in
+@@ -534,7 +533,6 @@ if (NOT VTK_INSTALL_NO_DEVELOPMENT)
+                 CMake/vtkTargetLinkLibrariesWithDynamicLookup.cmake
+                 CMake/vtkThirdParty.cmake
+                 CMake/vtkWrapHierarchy.cmake
+-                CMake/vtkWrapJava.cmake
+                 CMake/vtkWrapperInit.data.in
+                 CMake/vtkWrapping.cmake
+                 CMake/vtkWrapPython.cmake
+diff --git a/Wrapping/Tools/CMakeLists.txt b/Wrapping/Tools/CMakeLists.txt
+index 8aef23d00e..019b939055 100644
+--- a/Wrapping/Tools/CMakeLists.txt
++++ b/Wrapping/Tools/CMakeLists.txt
+@@ -83,11 +83,4 @@ if(NOT VTK_COMPILE_TOOLS_IMPORTED)
+   vtk_compile_tools_target(vtkWrapPython)
+   vtk_compile_tools_target(vtkWrapPythonInit)
+ 
+-  add_executable(vtkParseJava vtkParseJava.c)
+-  target_link_libraries(vtkParseJava vtkWrappingTools)
+-  add_executable(vtkWrapJava vtkWrapJava.c)
+-  target_link_libraries(vtkWrapJava vtkWrappingTools)
+-  vtk_compile_tools_target(vtkParseJava)
+-  vtk_compile_tools_target(vtkWrapJava)
+-
+ endif()

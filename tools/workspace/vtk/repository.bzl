@@ -4,7 +4,7 @@
 """
 Makes selected VTK headers and precompiled shared libraries available to be
 used as a C++ dependency. On Ubuntu, a VTK archive, built by the project
-maintainers from the Dockerfile and shell scripts in this directory, is
+maintainers from the Dockerfile and shell scripts in the docker subdirectory, is
 downloaded and unpacked. On macOS, VTK must be installed from the
 robotlocomotion/director tap (https://git.io/vN6ft) using Homebrew.
 
@@ -104,8 +104,12 @@ def _impl(repository_ctx):
         ), "include")
     elif os_result.is_ubuntu:
         if os_result.ubuntu_release == "18.04":
-            archive = "vtk-8.2.0-embree-3.5.1-ospray-1.8.2-python-3.6.8-qt-5.9.5-bionic-x86_64.tar.gz"  # noqa
-            sha256 = "42e0661004d089a93202c15e49b36167c02f92e40f9c62a412580ebc434f50ff"  # noqa
+            archive = "vtk-8.2.0-embree-3.5.2-ospray-1.8.5-python-3.6.9-qt-5.9.5-bionic-x86_64.tar.gz"  # noqa
+            sha256 = "0000000000000000000000000000000000000000000000000000000000000000"  # noqa
+        if os_result.ubuntu_release == "20.04":
+            archive = "vtk-8.2.0-embree-3.5.2-ospray-1.8.5-python-3.8.2-qt-5.12.8-focal-x86_64.tar.gz"  # noqa
+            sha256 = "0000000000000000000000000000000000000000000000000000000000000000"  # noqa
+
         else:
             fail("Operating system is NOT supported", attr = os_result)
 
@@ -336,17 +340,6 @@ licenses([
 
     file_content += _vtk_cc_library(
         repository_ctx.os.name,
-        "vtkDICOMParser",
-        deps = [":vtksys"],
-    )
-
-    file_content += _vtk_cc_library(
-        repository_ctx.os.name,
-        "vtkdoubleconversion",
-    )
-
-    file_content += _vtk_cc_library(
-        repository_ctx.os.name,
         "vtkFiltersAMR",
         deps = [
             ":vtkCommonCore",
@@ -446,10 +439,10 @@ licenses([
             ":vtkCommonDataModel",
             ":vtkCommonExecutionModel",
             ":vtkCommonMisc",
-            ":vtkdoubleconversion",
-            ":vtklzma",
             ":vtksys",
+            "@double_conversion",
             "@liblz4",
+            "@liblzma",
             "@zlib",
         ],
     )
@@ -556,8 +549,6 @@ licenses([
             ":vtkCommonMisc",
             ":vtkCommonSystem",
             ":vtkCommonTransforms",
-            ":vtkDICOMParser",
-            ":vtkmetaio",
             "@libjpeg",
             "@libpng",
             "@libtiff",
@@ -599,8 +590,6 @@ licenses([
             ":vtksys",
         ],
     )
-
-    file_content += _vtk_cc_library(repository_ctx.os.name, "vtklzma")
 
     file_content += _vtk_cc_library(
         repository_ctx.os.name,
@@ -658,12 +647,6 @@ licenses([
         ],
     )
 
-    # Segmentation faults with system versions of GLEW on Ubuntu 16.04.
-    if repository_ctx.os.name == "linux":
-        VTKGLEW = ":vtkglew"
-    else:
-        VTKGLEW = "@glew"
-
     file_content += _vtk_cc_library(
         repository_ctx.os.name,
         "vtkRenderingOpenGL2",
@@ -689,7 +672,7 @@ licenses([
             ":vtkCommonTransforms",
             ":vtkRenderingCore",
             ":vtksys",
-            VTKGLEW,
+            "@glew",
         ],
     )
 
@@ -859,12 +842,9 @@ cc_library(
             ":vtkRenderingOpenGL2",
             ":vtkRenderingVolume",
             ":vtksys",
-            VTKGLEW,
+            "@glew",
         ],
     )
-
-    if repository_ctx.os.name == "linux":
-        file_content += _vtk_cc_library(repository_ctx.os.name, "vtkglew")
 
     file_content += _vtk_cc_library(
         repository_ctx.os.name,
@@ -876,12 +856,6 @@ cc_library(
         ],
         visibility = ["//visibility:private"],
         header_only = True,
-    )
-
-    file_content += _vtk_cc_library(
-        repository_ctx.os.name,
-        "vtkmetaio",
-        deps = ["@zlib"],
     )
 
     file_content += _vtk_cc_library(repository_ctx.os.name, "vtksys")

@@ -2,9 +2,11 @@ ipywidgets
 lxml
 matplotlib
 notebook
+pyassimp
 pydot
+Pygments
+pyparsing
 PyYAML
 pyzmq
 tornado
 u-msgpack-python
-virtualenv

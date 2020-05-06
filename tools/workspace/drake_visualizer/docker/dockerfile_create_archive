@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled drake-visualizer binaries
+# that are downloaded during the build. They are neither called during the build
+# nor expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  lsb-release \
+  python3 \
+  qt5-default
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+pushd /opt/director
+tar -czf "dv-0.1.0-406-g4c3e570a-python-$(python3 -V 2>&1 | sed -n 's/^.*\n*Python \([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\1.\2.\3/p')-qt-$(qmake -v | sed -n 's/^.*\n*.*Qt version \([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\).*/\1.\2.\3/p')-vtk-$(sed -n 's/^#define VTK_VERSION "\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)"$/\1.\2.\3/p' /opt/vtk/include/vtk-*/vtkVersionMacros.h)-$(lsb_release -cs)-$(uname -p).tar.gz" -- *
+popd

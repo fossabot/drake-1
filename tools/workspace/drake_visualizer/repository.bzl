@@ -3,29 +3,13 @@
 
 """
 Downloads and unpacks a precompiled version of drake-visualizer (a subset of
-Director, https://git.io/vNKjq) and makes it available to be used as a
-dependency of shell scripts.
+Director, https://git.io/vNKjq) built by the project maintainers from the
+Dockerfile and shell scripts in the docker subdirectory, and makes it available
+to be used as a dependency of shell scripts.
 
 Archive naming convention:
     dv-<version>-g<commit>-python-<python version>-qt-<qt version>
         -vtk-<vtk version>-<platform>-<arch>[-<rebuild>]
-
-Build configuration:
-    BUILD_SHARED_LIBS=OFF
-    CMAKE_BUILD_TYPE=Release
-    CMAKE_C_FLAGS=-D_FORTIFY_SOURCE=2 -fstack-protector-strong
-    CMAKE_CXX_FLAGS=-D_FORTIFY_SOURCE=2 -fstack-protector-strong
-    CMAKE_EXE_LINKER_FLAGS=-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro
-    CMAKE_MODULE_LINKER_FLAGS=-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro
-    CMAKE_SHARED_LINKER_FLAGS=-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro
-    DD_QT_VERSION=5
-    USE_EXTERNAL_INSTALL=ON
-    USE_LCM=ON
-    USE_LCMGL=ON
-    USE_SYSTEM_EIGEN=ON
-    USE_SYSTEM_LCM=ON
-    USE_SYSTEM_LIBBOT=ON
-    USE_SYSTEM_VTK=ON
 
 Example:
     WORKSPACE:
@@ -48,19 +32,20 @@ Argument:
 
 load("@drake//tools/workspace:os.bzl", "determine_os")
 
-# TODO(jamiesnape): Publish scripts used to create binaries. There will be a CI
-# job for developers to build new binaries on demand.
 def _impl(repository_ctx):
     os_result = determine_os(repository_ctx)
     if os_result.error != None:
         fail(os_result.error)
 
     if os_result.is_macos:
-        archive = "dv-0.1.0-406-g4c3e570a-python-3.8.2-qt-5.14.1-vtk-8.2.0-mac-x86_64.tar.gz"  # noqa
-        sha256 = "d09c2bfc80c4e50e178f588c6c2e80b5ce627251ca14c9841dba1f6c0c07fc31"  # noqa
+        archive = "dv-0.1.0-406-g4c3e570a-python-3.8.2-qt-5.14.2-vtk-8.2.0-mac-x86_64.tar.gz"  # noqa
+        sha256 = "0000000000000000000000000000000000000000000000000000000000000000"  # noqa
     elif os_result.ubuntu_release == "18.04":
-        archive = "dv-0.1.0-406-g4c3e570a-python-3.6.8-qt-5.9.5-vtk-8.2.0-bionic-x86_64.tar.gz"  # noqa
-        sha256 = "70043c4bff0ea142e06b2b26c9dfceb549db5131c14a139bc57e1b4fa35094af"  # noqa
+        archive = "dv-0.1.0-406-g4c3e570a-python-3.6.9-qt-5.9.5-vtk-8.2.0-bionic-x86_64.tar.gz"  # noqa
+        sha256 = "0000000000000000000000000000000000000000000000000000000000000000"  # noqa
+    elif os_result.ubuntu_release == "20.04":
+        archive = "dv-0.1.0-406-g4c3e570a-python-3.8.2-qt-5.12.8-vtk-8.2.0-focal-x86_64.tar.gz"  # noqa
+        sha256 = "0000000000000000000000000000000000000000000000000000000000000000"  # noqa
     else:
         fail("Operating system is NOT supported", attr = os_result)
 

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled vtk binaries that are
+# downloaded during the build. They are neither called during the build nor
+# expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+if [[ ! -x /.dockerenv ]]; then
+  echo 'ERROR: This script should be run via the accompanying Dockerfile' >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  binutils \
+  ca-certificates \
+  cmake \
+  g++ \
+  gcc \
+  libtbb-dev \
+  ninja-build \
+  wget
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+wget -nv -O embree-3.5.2.tar.gz https://github.com/embree/embree/archive/v3.5.2.tar.gz
+echo '245af8820a820af94679fa1d43a05a9c825451be0d603b6165229556adf49517  embree-3.5.2.tar.gz' \
+  | sha256sum -c
+tar --one-top-level=embree-src --strip-components=1 -xzf embree-*.tar.gz
+rm -f embree-*.tar.gz
+
+mkdir -p embree-bin /opt/vtk
+pushd embree-bin
+cmake \
+  -DBUILD_TESTING:BOOL=OFF \
+  -DCMAKE_BUILD_TYPE:STRING=Release \
+  -DCMAKE_C_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1' \
+  -DCMAKE_CXX_FLAGS:STRING='-D_FORTIFY_SOURCE=2 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1' \
+  -DCMAKE_EXE_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DCMAKE_INSTALL_PREFIX:PATH=/opt/vtk \
+  -DCMAKE_SHARED_LINKER_FLAGS:STRING='-Wl,-Bsymbolic-functions -Wl,-z,now -Wl,-z,relro' \
+  -DEMBREE_IGNORE_CMAKE_CXX_FLAGS:BOOL=OFF \
+  -DEMBREE_MAX_ISA:STRING=SSE4.2 \
+  -DEMBREE_STACK_PROTECTOR:BOOL=ON \
+  -DEMBREE_TUTORIALS:BOOL=OFF \
+  -GNinja \
+  -Wno-dev \
+  ../embree-src
+ninja install/strip
+popd
+rm -rf embree-*

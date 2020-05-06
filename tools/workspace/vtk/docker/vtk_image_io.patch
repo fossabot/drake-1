@@ -1,0 +1,112 @@
+From: Jamie Snape <jamie.snape@kitware.com>
+Date: Wed, 6 May 2019 00:00:00 -0400
+Subject: [PATCH] Do not build vtkIOImage with DICOM and MetaIO reader and
+  writer support
+---
+ IO/Image/CMakeLists.txt                |  3 ---
+ IO/Image/Testing/Cxx/CMakeLists.txt    | 15 ---------------
+ IO/Image/Testing/Python/CMakeLists.txt |  1 -
+ IO/Image/module.cmake                  |  2 --
+ IO/Image/vtkImageReader2Factory.cxx    |  4 ----
+ 5 files changed, 25 deletions(-)
+
+diff --git a/IO/Image/CMakeLists.txt b/IO/Image/CMakeLists.txt
+index 864a19dde5..40d531d98e 100644
+--- a/IO/Image/CMakeLists.txt
++++ b/IO/Image/CMakeLists.txt
+@@ -2,7 +2,6 @@ set(Module_SRCS
+   vtkBMPReader.cxx
+   vtkBMPWriter.cxx
+   vtkDEMReader.cxx
+-  vtkDICOMImageReader.cxx
+   vtkGESignaReader.cxx
+   vtkImageExport.cxx
+   vtkImageImport.cxx
+@@ -17,8 +16,6 @@ set(Module_SRCS
+   vtkJSONImageWriter.cxx
+   vtkMedicalImageProperties.cxx
+   vtkMedicalImageReader2.cxx
+-  vtkMetaImageReader.cxx
+-  vtkMetaImageWriter.cxx
+   vtkMRCReader.cxx
+   vtkNIFTIImageHeader.cxx
+   vtkNIFTIImageReader.cxx
+diff --git a/IO/Image/Testing/Cxx/CMakeLists.txt b/IO/Image/Testing/Cxx/CMakeLists.txt
+index 9a06be3e68..b3082d9e53 100644
+--- a/IO/Image/Testing/Cxx/CMakeLists.txt
++++ b/IO/Image/Testing/Cxx/CMakeLists.txt
+@@ -10,27 +10,12 @@ vtk_add_test_cxx(vtkIOImageCxxTests data_tests
+   TestNIFTIReaderAnalyze.cxx
+   TestNIFTI2.cxx
+   )
+-set(TestMetaIO_ARGS "DATA{${VTK_TEST_INPUT_DIR}/HeadMRVolume.mhd,HeadMRVolume.raw}")
+-vtk_add_test_cxx(vtkIOImageCxxTests tests
+-  NO_DATA NO_VALID NO_OUTPUT
+-  TestDataObjectIO.cxx
+-  TestMetaIO.cxx
+-  TestImportExport.cxx
+-  )
+
+ # Each of these must be added in a separate vtk_add_test_cxx
+ vtk_add_test_cxx(vtkIOImageCxxTests tests
+   TestJPEGReader.cxx,NO_OUTPUT
+     "DATA{${VTK_TEST_INPUT_DIR}/beach.jpg}")
+
+-vtk_add_test_cxx(vtkIOImageCxxTests tests
+-  TestDICOMImageReader.cxx,NO_OUTPUT
+-    "DATA{${VTK_TEST_INPUT_DIR}/dicom/prostate.IMG}")
+-
+-vtk_add_test_cxx(vtkIOImageCxxTests tests
+-  TestDICOMImageReaderFileCollection.cxx,NO_OUTPUT
+-    "collection")
+-
+ vtk_add_test_cxx(vtkIOImageCxxTests tests
+   TestBMPReader.cxx,NO_OUTPUT
+     "DATA{${VTK_TEST_INPUT_DIR}/masonry.bmp}")
+diff --git a/IO/Image/Testing/Python/CMakeLists.txt b/IO/Image/Testing/Python/CMakeLists.txt
+index a056cdf652..94dd469524 100644
+--- a/IO/Image/Testing/Python/CMakeLists.txt
++++ b/IO/Image/Testing/Python/CMakeLists.txt
+@@ -5,7 +5,6 @@ vtk_add_test_python(
+   TestMHD.py
+   TestTIFFReader.py
+   dem.py
+-  TestMetaImage2D.py
+   TestNIFTIReaderWriter.py
+   TestPNGTextChunks.py,NO_VALID
+   TestSetFileNames.py
+diff --git a/IO/Image/module.cmake b/IO/Image/module.cmake
+index a4c5a5ba4c..d27a50b257 100644
+--- a/IO/Image/module.cmake
++++ b/IO/Image/module.cmake
+@@ -22,8 +22,6 @@ vtk_module(vtkIOImage
+     vtkCommonMisc
+     vtkCommonSystem
+     vtkCommonTransforms
+-    vtkDICOMParser
+-    vtkMetaIO
+     vtkjpeg
+     vtkpng
+     vtksys
+diff --git a/IO/Image/vtkImageReader2Factory.cxx b/IO/Image/vtkImageReader2Factory.cxx
+index 2bc1c72042..95d7e2815d 100644
+--- a/IO/Image/vtkImageReader2Factory.cxx
++++ b/IO/Image/vtkImageReader2Factory.cxx
+@@ -25,7 +25,6 @@
+ #include "vtkPNMReader.h"
+ #include "vtkSLCReader.h"
+ #include "vtkTIFFReader.h"
+-#include "vtkMetaImageReader.h"
+
+ // Destroying the prototype readers requires information keys.
+ // Include the manager here to make sure the keys are not destroyed
+@@ -146,9 +145,6 @@ void vtkImageReader2Factory::InitializeReaders()
+   vtkImageReader2Factory::AvailableReaders->
+     AddItem((reader = vtkGESignaReader::New()));
+   reader->Delete();
+-  vtkImageReader2Factory::AvailableReaders->
+-    AddItem((reader = vtkMetaImageReader::New()));
+-  reader->Delete();
+ }
+
+ void vtkImageReader2Factory::GetRegisteredReaders(vtkImageReader2Collection* collection)

@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# This shell script and the accompanying Dockerfile and shell scripts are used
+# by the project maintainers to create the precompiled drake-visualizer binaries
+# that are downloaded during the build. They are neither called during the build
+# nor expected to be called by most developers or users of the project.
+
+set -euxo pipefail
+
+if [[ ! -x /.dockerenv ]]; then
+  echo 'ERROR: This script should be run via the accompanying Dockerfile' >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  ca-certificates \
+  gnupg
+
+apt-key adv --fetch-keys https://bazel.build/bazel-release.pub.gpg
+echo 'deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8' \
+  | tee /etc/apt/sources.list.d/bazel.list
+
+apt-get update -qq
+apt-get install --no-install-recommends -o Dpkg::Use-Pty=0 -qy \
+  bazel \
+  binutils \
+  chrpath \
+  default-jdk \
+  file \
+  g++ \
+  gcc \
+  git \
+  libglib2.0-dev \
+  patchelf \
+  pkg-config \
+  python3
+set +x
+rm -rf /var/lib/apt/lists/*
+set -x
+
+git clone --depth 1 -q https://github.com/RobotLocomotion/drake.git
+
+pushd drake
+bazel run \
+  --copt=-fstack-protector-strong \
+  --host_copt=-fstack-protector-strong \
+  --linkopt=-Wl,-Bsymbolic-functions \
+  --linkopt=-Wl,-z,now
+  --linkopt=-Wl,-z,relro \
+  @lcm//:install -- /opt/dv
+bazel clean --expunge
+bazel shutdown
+popd
+
+rm -rf /root/.cache/bazel drake
